@@ -6,7 +6,7 @@
  */
 
 $plugin = array(
-  // Cache plugins are the rare plugin types that have no real UI but
+  // cache plugins are the rare plugin types that have no real UI but
   // we're providing a title just in case.
   'title' => t('Simple'),
   'cache get' => 'ctools_cache_simple_cache_get',
@@ -15,8 +15,6 @@ $plugin = array(
 );
 
 function ctools_cache_simple_cache_get($data, $key) {
-  ctools_include('object-cache');
-
   // Ensure that if there is somehow no data, we at least don't stomp on other
   // people's caches.
   if (empty($data)) {
@@ -27,8 +25,6 @@ function ctools_cache_simple_cache_get($data, $key) {
 }
 
 function ctools_cache_simple_cache_set($data, $key, $object) {
-  ctools_include('object-cache');
-
   // Ensure that if there is somehow no data, we at least don't stomp on other
   // people's caches.
   if (empty($data)) {
@@ -39,8 +35,6 @@ function ctools_cache_simple_cache_set($data, $key, $object) {
 }
 
 function ctools_cache_simple_cache_clear($data, $key) {
-  ctools_include('object-cache');
-
   // Ensure that if there is somehow no data, we at least don't stomp on other
   // people's caches.
   if (empty($data)) {

@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Plugin to provide access control based upon a parent term.
@@ -15,13 +14,14 @@ $plugin = array(
   'callback' => 'ctools_term_has_parent_ctools_access_check',
   'default' => array('vid' => array(), 'negate' => 0),
   'settings form' => 'ctools_term_has_parent_ctools_access_settings',
+  'settings form validation' => 'ctools_term_has_parent_ctools_access_settings_validate',
   'settings form submit' => 'ctools_term_has_parent_ctools_access_settings_submit',
   'summary' => 'ctools_term_has_parent_ctools_access_summary',
   'required context' => new ctools_context_required(t('Term'), array('taxonomy_term', 'terms')),
 );
 
 /**
- * Settings form for the 'by parent term' access plugin.
+ * Settings form for the 'by parent term' access plugin
  */
 function ctools_term_has_parent_ctools_access_settings($form, &$form_state, $conf) {
   // If no configuration was saved before, set some defaults.
@@ -50,19 +50,20 @@ function ctools_term_has_parent_ctools_access_settings($form, &$form_state, $con
   // A note: Dependency works strangely on these forms as they have never been
   // updated to a more modern system so they are not individual forms of their
   // own like the content types.
+
   $form['settings']['#tree'] = TRUE;
 
   // Loop over each of the configured vocabularies.
   foreach (taxonomy_get_vocabularies() as $vid => $vocabulary) {
     $options[$vid] = $vocabulary->name;
-    $form['settings']['vid_' . $vid] = array(
+    $form['settings'][$vid] = array(
       '#title' => t('Terms'),
       '#description' => t('Select a term or terms from @vocabulary.', array('@vocabulary' => $vocabulary->name)),
       '#dependency' => array('ctools-select-vid' => array($vocabulary->vid)),
-      '#default_value' => !empty($conf['vid_' . $vid]) ? $conf['vid_' . $vid] : '',
+      '#default_value' => !empty($conf[$vid]) ? $conf[$vid] : '',
       '#size' => 10,
       '#multiple' => TRUE,
-      // @todo: Remove the following workaround when the following patch is in core. {@see:http://drupal.org/node/1117526}
+      //@todo: Remove the following workaround when the following patch is in core. {@see:http://drupal.org/node/1117526}
       '#name' => sprintf("settings[%u][]", $vid),
       '#attributes' => array('multiple' => 'multiple'),
     );
@@ -71,29 +72,18 @@ function ctools_term_has_parent_ctools_access_settings($form, &$form_state, $con
     foreach (taxonomy_get_tree($vocabulary->vid) as $term) {
       $terms[$term->tid] = str_repeat('-', $term->depth) . ($term->depth ? ' ' : '') . $term->name;
     }
-    $form['settings']['vid_' . $vid]['#type'] = 'checkboxes';
-    $form['settings']['vid_' . $vid]['#options'] = $terms;
+    $form['settings'][$vid]['#type'] = 'select';
+    $form['settings'][$vid]['#options'] = $terms;
     unset($terms);
   }
   $form['settings']['vid']['#options'] = $options;
   $form['settings']['include_self'] = array(
     '#title' => t('Include these term(s) as candidates?'),
     '#description' => t('When this rule is evaluated, should the term(s) you select be included as candidates for access?'),
-    '#default_value' => !empty($conf['include_self']) ? $conf['include_self'] : FALSE,
+    '#default_value' => $conf['include_self'],
     '#type' => 'checkbox',
   );
   return $form;
-}
-
-/**
- * Filters values to store less.
- */
-function ctools_term_has_parent_ctools_access_settings_submit($form, &$form_state) {
-  foreach ($form_state['values']['settings'] as $key => $value) {
-    if (strpos($key, 'vid_') === 0) {
-      $form_state['values']['settings'][$key] = array_filter($form_state['values']['settings'][$key]);
-    }
-  }
 }
 
 /**
@@ -115,36 +105,37 @@ function ctools_term_has_parent_ctools_access_check($conf, $context) {
   // we'll start looking up the hierarchy from our context term id.
   $current_term = $context->data->tid;
 
-  $term = '';
+  $term='';
 
-  // Scan up the tree.
-  while (TRUE) {
-    // Select parent as term_parent to avoid PHP5 complications with the parent keyword.
-    // @todo: Find a way to reduce the number of queries required for really deep hierarchies.
-    $term = db_query("SELECT parent AS term_parent, tid AS tid FROM {taxonomy_term_hierarchy} th WHERE th.tid = :tid", array(':tid' => $current_term))->fetchObject();
+  // scan up the tree.
+  while (true) {
+    // select parent as term_parent to avoid PHP5 complications with the parent keyword
+    //@todo: Find a way to reduce the number of queries required for really deep hierarchies.
+    $term = db_query("SELECT parent AS term_parent, tid AS tid FROM {taxonomy_term_hierarchy} th WHERE th.tid = :tid", array(':tid'=>$current_term))->fetchObject();
 
-    // If no term is found, get out of the loop.
+    // if no term is found, get out of the loop
     if (!$term || empty($term->tid)) {
       break;
     }
 
-    // Check the term selected, if the user asked it to.
-    if (!empty($conf['include_self']) && isset($conf['vid_' . $vid][$term->tid])) {
+    // check the term selected, if the user asked it to.
+    if (!empty($conf['include_self']) && in_array($term->tid, $conf[$vid])) {
       return TRUE;
     }
 
-    // Did we find the parent TID we were looking for?
-    if (isset($conf['vid_' . $vid][$term->tid])) {
+    // did we find the parent TID we were looking for?
+    if (in_array($term->term_parent, $conf[$vid])) {
       // YES, we're done!
       return TRUE;
     }
     // Nope, we didn't find it.
+
     // If this is the top of the hierarchy, stop scanning.
-    if ($term->term_parent == 0) {
+    if ($term->term_parent==0) {
       break;
     }
 
-    // Update the parent, and keep scanning.
+    // update the parent, and keep scanning.
     $current_term = $term->term_parent;
   }
 
@@ -155,9 +146,9 @@ function ctools_term_has_parent_ctools_access_check($conf, $context) {
  * Provide a summary description based upon the checked terms.
  */
 function ctools_term_has_parent_ctools_access_summary($conf, $context) {
-  $vid = (int) $conf['vid'];
+  $vid = (int)$conf['vid'];
   $terms = array();
-  foreach ($conf['vid_' . $vid] as $tid) {
+  foreach ($conf[$vid] as $tid) {
     $term = taxonomy_term_load($tid);
     $terms[] = $term->name;
   }
@@ -165,8 +156,6 @@ function ctools_term_has_parent_ctools_access_summary($conf, $context) {
   return format_plural(count($terms),
     '@term can have the parent "@terms"',
     '@term can have one of these parents: @terms',
-    array(
-      '@terms' => implode(', ', $terms),
-      '@term' => $context->identifier,
-    ));
+    array('@terms' => implode(', ', $terms),
+      '@term' => $context->identifier));
 }

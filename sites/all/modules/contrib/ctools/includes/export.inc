@@ -4,7 +4,7 @@
  * @file
  * Contains code to make it easier to have exportable objects.
  *
- * Documentation for exportable objects is contained in help/export.html.
+ * Documentation for exportable objects is contained in help/export.html
  */
 
 /**
@@ -86,36 +86,6 @@ function ctools_export_crud_load($table, $name) {
 }
 
 /**
- * Load multiple exportable objects.
- *
- * @param $table
- *   The name of the table to use to retrieve $schema values. This table
- *   must have an 'export' section containing data or this function
- *   will fail.
- * @param $names
- *   An array of unique IDs to load. The field for these IDs will be specified
- *   by the export key, which normally defaults to 'name'.
- *
- * @return
- *   An array of the loaded objects.
- */
-function ctools_export_crud_load_multiple($table, array $names) {
-  $schema = ctools_export_get_schema($table);
-  $export = $schema['export'];
-
-  $results = array();
-  if (!empty($export['load multiple callback']) && function_exists($export['load multiple callback'])) {
-    $results = $export['load multiple callback']($names);
-  }
-  else {
-    $results = ctools_export_load_object($table, 'names', $names);
-  }
-
-  // Ensure no empty results are returned.
-  return array_filter($results);
-}
-
-/**
  * Load all exportable objects of a given type.
  *
  * @param $table
@@ -126,7 +96,6 @@ function ctools_export_crud_load_multiple($table, array $names) {
  *   If TRUE, the static cache of all objects will be flushed prior to
  *   loading all. This can be important on listing pages where items
  *   might have changed on the page load.
- *
  * @return
  *   An array of all loaded objects, keyed by the unique IDs of the export key.
  */
@@ -329,6 +298,7 @@ function ctools_export_crud_set_status($table, $object, $status) {
 
 }
 
+
 /**
  * Enable a certain object.
  *
@@ -386,15 +356,10 @@ function ctools_export_crud_disable($table, $object) {
  */
 function ctools_export_load_object($table, $type = 'all', $args = array()) {
   $cache = &drupal_static(__FUNCTION__);
-  $cache_table_exists = &drupal_static(__FUNCTION__ . '_table_exists', array());
   $cached_database = &drupal_static('ctools_export_load_object_all');
 
-  if (!array_key_exists($table, $cache_table_exists)) {
-    $cache_table_exists[$table] = db_table_exists($table);
-  }
-
   $schema = ctools_export_get_schema($table);
-  if (empty($schema) || !$cache_table_exists[$table]) {
+  if (empty($schema)) {
     return array();
   }
 
@@ -426,7 +391,7 @@ function ctools_export_load_object($table, $type = 'all', $args = array()) {
     }
   }
 
-  // Build the query.
+  // Build the query
   $query = db_select($table, 't__0')->fields('t__0');
   $alias_count = 1;
   if (!empty($schema['join'])) {
@@ -451,7 +416,7 @@ function ctools_export_load_object($table, $type = 'all', $args = array()) {
   if ($type == 'names') {
     $query->condition($export['key'], $args, 'IN');
   }
-  elseif ($type == 'conditions') {
+  else if ($type == 'conditions') {
     foreach ($args as $key => $value) {
       if (isset($schema['fields'][$key])) {
         $query->condition($key, $value);
@@ -499,22 +464,14 @@ function ctools_export_load_object($table, $type = 'all', $args = array()) {
   if ($defaults) {
     foreach ($defaults as $object) {
       if ($type == 'conditions') {
-        // If this does not match all of our conditions, skip it.
+        // if this does not match all of our conditions, skip it.
         foreach ($args as $key => $value) {
-          if (!isset($object->$key)) {
-            continue 2;
-          }
-          if (is_array($value)) {
-            if (!in_array($object->$key, $value)) {
-              continue 2;
-            }
-          }
-          elseif ($object->$key != $value) {
+          if (!isset($object->$key) || $object->$key != $value) {
             continue 2;
           }
         }
       }
-      elseif ($type == 'names') {
+      else if ($type == 'names') {
         if (!in_array($object->{$export['key']}, $args)) {
           continue;
         }
@@ -528,7 +485,6 @@ function ctools_export_load_object($table, $type = 'all', $args = array()) {
       if (!empty($cache[$table][$object->{$export['key']}])) {
         $cache[$table][$object->{$export['key']}]->{$export['export type string']} = t('Overridden');
         $cache[$table][$object->{$export['key']}]->export_type |= EXPORT_IN_CODE;
-        $cache[$table][$object->{$export['key']}]->export_module = isset($object->export_module) ? $object->export_module : NULL;
         if ($type == 'conditions') {
           $return[$object->{$export['key']}] = $cache[$table][$object->{$export['key']}];
         }
@@ -561,6 +517,7 @@ function ctools_export_load_object($table, $type = 'all', $args = array()) {
     }
   }
 
+  // For conditions,
   return $return;
 }
 
@@ -806,10 +763,10 @@ function _ctools_export_get_some_defaults($table, $export, $names) {
 function _ctools_export_unpack_object($schema, $data, $object = 'stdClass') {
   if (is_string($object)) {
     if (class_exists($object)) {
-      $object = new $object();
+      $object = new $object;
     }
     else {
-      $object = new stdClass();
+      $object = new stdClass;
     }
   }
 
@@ -819,7 +776,7 @@ function _ctools_export_unpack_object($schema, $data, $object = 'stdClass') {
       $object->$field = empty($info['serialize']) ? $data->$field : unserialize($data->$field);
     }
     else {
-      $object->$field = NULL;
+      $data->$field = NULL;
     }
   }
 
@@ -829,7 +786,7 @@ function _ctools_export_unpack_object($schema, $data, $object = 'stdClass') {
       if (!empty($join['load'])) {
         foreach ($join['load'] as $field) {
           $info = $join_schema['fields'][$field];
-          $object->$field = empty($info['serialize']) ? $data->$field : unserialize($data->$field);
+          $object->$field = empty($info['serialize']) ? $data->$field : unserialize(db_decode_blob($data->$field));
         }
       }
     }
@@ -872,14 +829,14 @@ function ctools_var_export($var, $prefix = '') {
       $output .= $prefix . ')';
     }
   }
-  elseif (is_object($var) && get_class($var) === 'stdClass') {
+  else if (is_object($var) && get_class($var) === 'stdClass') {
     // var_export() will export stdClass objects using an undefined
     // magic method __set_state() leaving the export broken. This
     // workaround avoids this by casting the object as an array for
     // export and casting it back to an object when evaluated.
-    $output = '(object) ' . ctools_var_export((array) $var, $prefix);
+    $output .= '(object) ' . ctools_var_export((array) $var, $prefix);
   }
-  elseif (is_bool($var)) {
+  else if (is_bool($var)) {
     $output = $var ? 'TRUE' : 'FALSE';
   }
   else {
@@ -898,11 +855,10 @@ function ctools_export_object($table, $object, $indent = '', $identifier = NULL,
     $identifier = $schema['export']['identifier'];
   }
 
-  $output = $indent . '$' . $identifier . ' = new ' . get_class($object) . "();\n";
+  $output = $indent . '$' . $identifier . ' = new ' . get_class($object) . ";\n";
 
   if ($schema['export']['can disable']) {
-    $disabled = !isset($object->disabled) || $object->disabled != TRUE ? 'FALSE' : 'TRUE';
-    $output .= $indent . '$' . $identifier . '->disabled = ' . $disabled . '; /* Edit this to true to make a default ' . $identifier . ' disabled initially */' . "\n";
+    $output .= $indent . '$' . $identifier . '->disabled = FALSE; /* Edit this to true to make a default ' . $identifier . ' disabled initially */' . "\n";
   }
   if (!empty($schema['export']['api']['current_version'])) {
     $output .= $indent . '$' . $identifier . '->api_version = ' . $schema['export']['api']['current_version'] . ";\n";
@@ -945,20 +901,14 @@ function ctools_export_object($table, $object, $indent = '', $identifier = NULL,
     else {
       $value = $object->$field;
       if ($info['type'] == 'int') {
-        if (isset($info['size']) && $info['size'] == 'tiny') {
-          $info['boolean'] = (!isset($info['boolean'])) ? $schema['export']['boolean'] : $info['boolean'];
-          $value = ($info['boolean']) ? (bool) $value : (int) $value;
-        }
-        else {
-          $value = (int) $value;
-        }
+        $value = (isset($info['size']) && $info['size'] == 'tiny') ? (bool) $value : (int) $value;
       }
 
       $output .= $indent . '$' . $identifier . '->' . $field . ' = ' . ctools_var_export($value, $indent) . ";\n";
     }
   }
 
-  // And bottom additions here.
+  // And bottom additions here
   foreach ($additions2 as $field => $value) {
     $output .= $indent . '$' . $identifier . '->' . $field . ' = ' . ctools_var_export($value, $indent) . ";\n";
   }
@@ -973,12 +923,7 @@ function ctools_export_object($table, $object, $indent = '', $identifier = NULL,
  * that it's easily available.
  */
 function ctools_export_get_schema($table) {
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['cache'] = &drupal_static(__FUNCTION__);
-  }
-  $cache = &$drupal_static_fast['cache'];
-
+  $cache = &drupal_static(__FUNCTION__);
   if (empty($cache[$table])) {
     $schema = drupal_get_schema($table);
 
@@ -986,7 +931,7 @@ function ctools_export_get_schema($table) {
     // simply hasn't been cached. If we've been asked, let's force the
     // issue.
     if (!$schema || empty($schema['export'])) {
-      // Force a schema reset:
+      // force a schema reset:
       $schema = drupal_get_schema($table, TRUE);
     }
 
@@ -998,7 +943,7 @@ function ctools_export_get_schema($table) {
       return array();
     }
 
-    // Add some defaults.
+    // Add some defaults
     $schema['export'] += array(
       'key' => 'name',
       'key name' => 'Name',
@@ -1014,7 +959,6 @@ function ctools_export_get_schema($table) {
       'cache defaults' => FALSE,
       'default cache bin' => 'cache',
       'export type string' => 'type',
-      'boolean' => TRUE,
     );
 
     // If the export definition doesn't have the "primary key" then the CRUD
@@ -1029,7 +973,6 @@ function ctools_export_get_schema($table) {
     //
     // create callback
     // load callback
-    // load multiple callback
     // load all callback
     // save callback
     // delete callback
@@ -1050,7 +993,7 @@ function ctools_export_get_schema($table) {
  * Gets the schemas for all tables with ctools object metadata.
  */
 function ctools_export_get_schemas($for_export = FALSE) {
-  $export_tables = &drupal_static(__FUNCTION__);
+  static $export_tables;
   if (is_null($export_tables)) {
     $export_tables = array();
     $schemas = drupal_get_schema();
@@ -1106,7 +1049,7 @@ function ctools_export_set_object_status($object, $new_status = TRUE) {
   $export = $schema['export'];
   $status = variable_get($export['status'], array());
 
-  // Compare.
+  // Compare
   if (!$new_status && $object->export_type & EXPORT_IN_DATABASE) {
     unset($status[$object->{$export['key']}]);
   }
@@ -1149,12 +1092,12 @@ function ctools_export_new_object($table, $set_defaults = TRUE) {
   $schema = ctools_export_get_schema($table);
   $export = $schema['export'];
 
-  $object = new $export['object']();
+  $object = new $export['object'];
   foreach ($schema['fields'] as $field => $info) {
     if (isset($info['object default'])) {
       $object->$field = $info['object default'];
     }
-    elseif (isset($info['default'])) {
+    else if (isset($info['default'])) {
       $object->$field = $info['default'];
     }
     else {
@@ -1179,11 +1122,11 @@ function ctools_export_new_object($table, $set_defaults = TRUE) {
 function ctools_export_to_hook_code(&$code, $table, $names = array(), $name = 'foo') {
   $schema = ctools_export_get_schema($table);
   $export = $schema['export'];
-  // Use the schema-specified function for generating hook code, if one exists.
+  // Use the schema-specified function for generating hook code, if one exists
   if (function_exists($export['to hook code callback'])) {
     $output = $export['to hook code callback']($names, $name);
   }
-  // Otherwise, the following code generates basic hook code.
+  // Otherwise, the following code generates basic hook code
   else {
     $output = ctools_export_default_to_hook_code($schema, $table, $names, $name);
   }
@@ -1218,16 +1161,16 @@ function ctools_export_to_hook_code(&$code, $table, $names = array(), $name = 'f
 function ctools_export_default_to_hook_code($schema, $table, $names, $name) {
   $export = $schema['export'];
   $output = '';
-  $objects = ctools_export_crud_load_multiple($table, $names);
+  $objects = ctools_export_load_object($table, 'names', $names);
   if ($objects) {
     $output = "/**\n";
-    $output .= " * Implements hook_{$export['default hook']}().\n";
+    $output .= " * Implementation of hook_{$export['default hook']}()\n";
     $output .= " */\n";
     $output .= "function " . $name . "_{$export['default hook']}() {\n";
     $output .= "  \${$export['identifier']}s = array();\n\n";
     foreach ($objects as $object) {
       $output .= ctools_export_crud_export($table, $object, '  ');
-      $output .= "  \${$export['identifier']}s['" . check_plain($object->{$export['key']}) . "'] = \${$export['identifier']};\n\n";
+      $output .= "  \${$export['identifier']}s['" . check_plain($object->$export['key']) . "'] = \${$export['identifier']};\n\n";
     }
     $output .= "  return \${$export['identifier']}s;\n";
     $output .= "}\n";
@@ -1235,7 +1178,6 @@ function ctools_export_default_to_hook_code($schema, $table, $names, $name) {
 
   return $output;
 }
-
 /**
  * Default function for listing bulk exportable objects.
  */

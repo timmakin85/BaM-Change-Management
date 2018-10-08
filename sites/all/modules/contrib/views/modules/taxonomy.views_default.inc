@@ -6,28 +6,26 @@
  */
 
 /**
- * Implements hook_views_default_views().
+ * Implementation of hook_views_default_views()
  */
 function taxonomy_views_default_views() {
   $views = array();
 
-  $view = new view();
+  $view = new view;
   $view->name = 'taxonomy_term';
   $view->description = 'A view to emulate Drupal core\'s handling of taxonomy/term.';
   $view->tag = 'default';
   $view->base_table = 'node';
   $view->human_name = 'Taxonomy term';
   $view->core = 7;
-  $view->api_version = '3.0';
+  $view->api_version = '3.0-alpha1';
   $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'access content';
+  $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
-  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['style_plugin'] = 'default';
@@ -102,7 +100,6 @@ function taxonomy_views_default_views() {
     t('Page'),
     t('Feed'),
   );
-
   $views['taxonomy_term'] = $view;
 
   return $views;

@@ -1,34 +1,27 @@
 <?php
-
 /**
  * @file
- * Definition of views templates on behalf of the node module.
- */
-
-/**
- * Implements hook_views_templates().
+ * Contains views templates on behalf of the node module.
  */
 function node_views_templates() {
-  // Only the standard install profile has the image field provided so only
-  // show it for it.
+  // Only the standard install profile has the image field provided so only show it for it.
   if (variable_get('install_profile', 'standard') != 'standard') {
     return array();
   }
-  $view = new view();
+  $view = new view;
   $view->name = 'image_gallery';
   $view->description = 'Shows all images which was uploaded on the "field_image" field';
   $view->tag = '';
   $view->base_table = 'node';
   $view->human_name = 'Image Gallery';
   $view->core = 7;
-  $view->api_version = '3.0';
+  $view->api_version = '3.0-alpha1';
   $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Defaults */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->display->display_options['title'] = 'Image gallery';
   $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'access content';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
   $handler->display->display_options['exposed_form']['type'] = 'basic';

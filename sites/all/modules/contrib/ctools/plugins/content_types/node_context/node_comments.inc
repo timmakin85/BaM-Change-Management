@@ -1,9 +1,5 @@
 <?php
 
-/**
- * @file
- */
-
 if (module_exists('comment')) {
   /**
    * Plugins are described by creating a $plugin array which will be used
@@ -24,17 +20,19 @@ if (module_exists('comment')) {
 }
 
 function ctools_node_comments_content_type_render($subtype, $conf, $panel_args, $context) {
-  if (empty($context->data->nid)) {
-    return;
-  }
-  $node = clone $context->data;
+  $node = isset($context->data) ? clone($context->data) : NULL;
   $block = new stdClass();
   $block->module = 'comments';
-  $block->delta = $node->nid;
-  $block->title = t('Comments');
+  $block->delta  = $node->nid;
 
-  if ($node->comment) {
+  $block->title = t('Comments');
+  if (empty($node)) {
+    $block->content = t('Node comments go here.');
+  }
+  else if ($node->comment) {
     $block->content = ctools_comment_render($node, $conf);
+    // Update the history table, stating that this user viewed this node.
+    node_tag_new($node);
   }
 
   return $block;
@@ -52,8 +50,7 @@ function ctools_node_comments_content_type_edit_form($form, &$form_state) {
   foreach (_comment_per_page() as $i) {
     $options[$i] = t('!a comments per page', array('!a' => $i));
   }
-  $form['comments_per_page'] = array(
-    '#type' => 'select',
+  $form['comments_per_page'] = array('#type' => 'select',
     '#title' => t('Pager'),
     '#default_value' => $conf['comments_per_page'],
     '#options' => $options,
@@ -87,7 +84,37 @@ function ctools_comment_render($node, $conf) {
   $mode = $conf['mode'];
   $comments_per_page = $conf['comments_per_page'];
 
-  $cids = comment_get_thread($node, $mode, $comments_per_page);
+  // Multiple comment view
+  $query = db_select('comment', 'c')->extend('PagerDefault');
+  $query->addField('c', 'cid');
+  $query
+    ->condition('c.nid', $node->nid)
+    ->addTag('node_access')
+    ->limit($comments_per_page);
+
+  $count_query = db_select('comment', 'c');
+  $count_query->addExpression('COUNT(*)');
+  $count_query
+    ->condition('c.nid', $node->nid)
+    ->addTag('node_access');
+
+  if (!user_access('administer comments')) {
+    $query->condition('c.status', COMMENT_PUBLISHED);
+    $count_query->condition('c.status', COMMENT_PUBLISHED);
+  }
+  if ($mode === COMMENT_MODE_FLAT) {
+    $query->orderBy('c.cid', 'ASC');
+  }
+  else {
+    // See comment above. Analysis reveals that this doesn't cost too
+    // much. It scales much much better than having the whole comment
+    // structure.
+    $query->orderBy('SUBSTRING(c.thread, 1, (LENGTH(c.thread) - 1))', 'ASC');
+  }
+
+  $query->setCountQuery($count_query);
+  $cids = $query->execute()->fetchCol();
+
   $comments = comment_load_multiple($cids);
 
   if ($comments) {
@@ -99,3 +126,4 @@ function ctools_comment_render($node, $conf) {
   }
   return;
 }
+

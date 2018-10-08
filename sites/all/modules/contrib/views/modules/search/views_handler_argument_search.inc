@@ -1,24 +1,17 @@
 <?php
 
 /**
- * @file
- * Definition of views_handler_argument_search.
- */
-
-/**
  * Argument that accepts query keys for search.
- *
- * @ingroup views_argument_handlers
  */
 class views_handler_argument_search extends views_handler_argument {
 
   /**
-   * Take sure that parseSearchExpression is runned and everything is set up.
+   * Take sure that parseSearchExpression is runned and everything is set up for it.
    *
-   * @param string $input
+   * @param $input
    *    The search phrase which was input by the user.
    */
-  public function query_parse_search_expression($input) {
+  function query_parse_search_expression($input) {
     if (!isset($this->search_query)) {
       $this->search_query = db_select('search_index', 'i', array('target' => 'slave'))->extend('viewsSearchQuery');
       $this->search_query->searchExpression($input, $this->view->base_table);
@@ -29,7 +22,7 @@ class views_handler_argument_search extends views_handler_argument {
   /**
    * Add this argument to the query.
    */
-  public function query($group_by = FALSE) {
+  function query($group_by = FALSE) {
     $required = FALSE;
     $this->query_parse_search_expression($this->argument);
     if (!isset($this->search_query)) {
@@ -42,22 +35,28 @@ class views_handler_argument_search extends views_handler_argument {
       }
     }
     if ($required) {
-      if (isset($this->operator) && ($this->operator == 'required')) {
+      if ($this->operator == 'required') {
         $this->query->add_where(0, 'FALSE');
       }
     }
     else {
-      $search_index = $this->ensure_my_table();
+      $search_index = $this->ensure_my_table();// Stores each condition, so and/or on the filter level will still work.
 
+      // Stores each condition, so and/or on the filter level will still work.
       $search_condition = db_and();
+      $or = db_or();
+      foreach ($words as $word) {
+        $or->condition("$search_index.word", $word);
+      }
 
-      // Create a new join to relate the 'search_total' table to our current
-      // 'search_index' table.
-      $join = new views_join();
+      // Create a new join to relate the 'search_total' table to our current 'search_index' table.
+      $join = new views_join;
       $join->construct('search_total', $search_index, 'word', 'word');
       $search_total = $this->query->add_relationship('search_total', $join, $search_index);
 
-      $this->search_score = $this->query->add_field('', "$search_index.score * $search_total.count", 'score', array('aggregate' => TRUE, 'function' => 'sum'));
+      $this->search_score = $this->query->add_field('', "SUM($search_index.score * $search_total.count)", 'score', array('aggregate' => TRUE));
+
+      $search_condition->condition($or);
 
       if (empty($this->query->relationships[$this->relationship])) {
         $base_table = $this->query->base_table;
@@ -66,29 +65,18 @@ class views_handler_argument_search extends views_handler_argument {
         $base_table = $this->query->relationships[$this->relationship]['base'];
       }
       $search_condition->condition("$search_index.type", $base_table);
-
       if (!$this->search_query->simple()) {
         $search_dataset = $this->query->add_table('search_dataset');
         $conditions = $this->search_query->conditions();
         $condition_conditions =& $conditions->conditions();
-        foreach ($condition_conditions as $key => &$condition) {
+        foreach ($condition_conditions  as $key => &$condition) {
           // Take sure we just look at real conditions.
           if (is_numeric($key)) {
             // Replace the conditions with the table alias of views.
             $this->search_query->condition_replace_string('d.', "$search_dataset.", $condition);
           }
         }
-        $search_conditions =& $search_condition->conditions();
-        $search_conditions = array_merge($search_conditions, $condition_conditions);
-      }
-      else {
-        // Stores each condition, so and/or on the filter level will still work.
-        $or = db_or();
-        foreach ($words as $word) {
-          $or->condition("$search_index.word", $word);
-        }
-
-        $search_condition->condition($or);
+        $search_conditions =& $search_condition->conditions() + $condition_conditions;
       }
 
       $this->query->add_where(0, $search_condition);
@@ -98,5 +86,4 @@ class views_handler_argument_search extends views_handler_argument {
       $this->query->add_having_expression(0, "COUNT(*) >= $placeholder", array($placeholder => $matches));
     }
   }
-
 }

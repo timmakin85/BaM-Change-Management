@@ -1,82 +1,49 @@
 <?php
-
-/**
- * @file
- * Definition of views_handler_field_comment_link.
- */
-
 /**
  * Base field handler to present a link.
- *
- * @ingroup views_field_handlers
  */
-class views_handler_field_comment_link extends views_handler_field_entity {
+class views_handler_field_comment_link extends views_handler_field {
+  function construct() {
+    parent::construct();
+    $this->additional_fields['cid'] = 'cid';
+    $this->additional_fields['nid'] = 'nid';
+  }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function option_definition() {
+  function option_definition() {
     $options = parent::option_definition();
     $options['text'] = array('default' => '', 'translatable' => TRUE);
-    $options['link_to_node'] = array('default' => FALSE, 'bool' => TRUE);
     return $options;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function options_form(&$form, &$form_state) {
+  function options_form(&$form, &$form_state) {
     $form['text'] = array(
       '#type' => 'textfield',
       '#title' => t('Text to display'),
       '#default_value' => $this->options['text'],
     );
-    $form['link_to_node'] = array(
-      '#title' => t('Link field to the node if there is no comment.'),
-      '#type' => 'checkbox',
-      '#default_value' => $this->options['link_to_node'],
-    );
     parent::options_form($form, $form_state);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function query() {
+  function query() {
     $this->ensure_my_table();
     $this->add_additional_fields();
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function render($values) {
-    $value = $this->get_value($values, 'cid');
+  function render($values) {
+    $value = $this->get_value($values, 'nid');
     return $this->render_link($this->sanitize_value($value), $values);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function render_link($data, $values) {
+  function render_link($data, $values) {
     $text = !empty($this->options['text']) ? $this->options['text'] : t('view');
-    $comment = $this->get_value($values);
-    $nid = $comment->nid;
-    $cid = $comment->cid;
+    $nid = $this->get_value($values, 'nid');
+    $cid = $this->get_value($values, 'cid');
 
     $this->options['alter']['make_link'] = TRUE;
+    $this->options['alter']['path'] = "comment/" . $cid;
     $this->options['alter']['html'] = TRUE;
-
-    if (!empty($cid)) {
-      $this->options['alter']['path'] = "comment/" . $cid;
-      $this->options['alter']['fragment'] = "comment-" . $cid;
-    }
-    // If there is no comment link to the node.
-    elseif ($this->options['link_to_node']) {
-      $this->options['alter']['path'] = "node/" . $nid;
-    }
+    $this->options['alter']['fragment'] = "comment-" . $cid;
 
     return $text;
   }
-
 }

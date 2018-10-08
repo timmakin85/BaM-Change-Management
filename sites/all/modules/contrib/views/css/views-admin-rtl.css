@@ -22,6 +22,10 @@
  */
 
 .form-actions {
+  float: left;
+}
+
+.views-displays {
   float: right;
 }
 

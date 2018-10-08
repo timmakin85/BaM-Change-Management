@@ -36,6 +36,13 @@ class ContextConditionUserTest extends DrupalWebTestCase {
     $this->assertTrue($saved, "Context 'testcontext' saved.");
   }
 
+  function tearDown() {
+    parent::tearDown();
+    context_delete($this->context);
+    user_delete($this->user1->uid);
+    user_delete($this->user2->uid);
+  }
+
   function test() {
     // User 1 triggers the context.
     $this->drupalLogin($this->user1);
@@ -73,6 +80,14 @@ class ContextConditionUserPageTest extends DrupalWebTestCase {
     $this->context->reactions = array('debug' => array('debug' => TRUE));
     $saved = context_save($this->context);
     $this->assertTrue($saved, "Context 'testcontext' saved.");
+  }
+
+  function tearDown() {
+    parent::tearDown();
+    context_delete($this->context);
+    $edit = array();
+    user_delete($this->user1->uid);
+    user_delete($this->user2->uid);
   }
 
   function test() {
@@ -142,6 +157,13 @@ class ContextConditionNodeTaxonomyTest extends DrupalWebTestCase {
     $this->assertTrue($saved, "Context 'testcontext' saved.");
   }
 
+  function tearDown() {
+    parent::tearDown();
+    context_delete($this->context);
+    taxonomy_term_delete($this->terms['apples']->tid);
+    taxonomy_term_delete($this->terms['oranges']->tid);
+  }
+
   function test() {
     // Apples does trigger the context.
     $edit = array(
@@ -180,7 +202,6 @@ class ContextConditionLanguageTest extends DrupalWebTestCase {
     parent::setUp('context', 'ctools', 'locale');
     $admin_user = $this->drupalCreateUser(array('administer site configuration', 'administer languages'));
     $this->drupalLogin($admin_user);
-    $this->drupalPost('admin/config/development/performance', array(), t('Clear all caches'));
 
     // Set up Spanish as second language.
     $this->drupalPost('admin/config/regional/language/add', array('langcode' => 'es'), t('Add language'));

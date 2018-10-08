@@ -1,10 +1,4 @@
 <?php
-
-/**
- * @file
- * Definition of views_handler_filter_boolean_operator_string.
- */
-
 /**
  * Simple filter to handle matching of boolean values.
  *
@@ -13,15 +7,9 @@
  *
  * Definition items:
  * - label: (REQUIRED) The label for the checkbox.
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_boolean_operator_string extends views_handler_filter_boolean_operator {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function query() {
+  function query() {
     $this->ensure_my_table();
     $where = "$this->table_alias.$this->real_field ";
 
@@ -34,7 +22,6 @@ class views_handler_filter_boolean_operator_string extends views_handler_filter_
     else {
       $where .= "<> ''";
     }
-    $this->query->add_where_expression($this->options['group'], $where);
+    $this->query->add_where($this->options['group'], $where);
   }
-
 }

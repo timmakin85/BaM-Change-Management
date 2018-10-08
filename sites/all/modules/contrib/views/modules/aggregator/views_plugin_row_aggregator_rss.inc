@@ -1,29 +1,17 @@
 <?php
-
 /**
  * @file
- * Definition of views_plugin_row_aggregator_rss.
+ * Contains the Aggregator Item RSS row style plugin.
  */
 
 /**
  * Plugin which loads an aggregator item and formats it as an RSS item.
  */
 class views_plugin_row_aggregator_rss extends views_plugin_row {
+  var $base_table = 'aggregator_item';
+  var $base_field = 'iid';
 
-  /**
-   *
-   */
-  public $base_table = 'aggregator_item';
-
-  /**
-   *
-   */
-  public $base_field = 'iid';
-
-  /**
-   * {@inheritdoc}
-   */
-  public function option_definition() {
+  function option_definition() {
     $options = parent::option_definition();
 
     $options['item_length'] = array('default' => 'default');
@@ -31,10 +19,7 @@ class views_plugin_row_aggregator_rss extends views_plugin_row {
     return $options;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function options_form(&$form, &$form_state) {
+  function options_form(&$form, &$form_state) {
     $form['item_length'] = array(
       '#type' => 'select',
       '#title' => t('Display type'),
@@ -48,10 +33,7 @@ class views_plugin_row_aggregator_rss extends views_plugin_row {
     );
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function render($row) {
+  function render($row) {
     $iid =  $row->{$this->field_alias};
     $sql =  "SELECT ai.iid, ai.fid, ai.title, ai.link, ai.author, ai.description, ";
     $sql .= "ai.timestamp, ai.guid, af.title AS feed_title, ai.link AS feed_LINK ";
@@ -61,13 +43,11 @@ class views_plugin_row_aggregator_rss extends views_plugin_row {
     $item = db_query($sql, array(':iid' => $iid))->fetchObject();
 
     $item->elements = array(
-      array(
-        'key' => 'pubDate',
-        'value' => gmdate('r', $item->timestamp),
-      ),
+      array('key' => 'pubDate', 'value' => gmdate('r', $item->timestamp)),
       array(
         'key' => 'dc:creator',
         'value' => $item->author,
+        'namespace' => array('xmlns:dc' => 'http://purl.org/dc/elements/1.1/'),
       ),
       array(
         'key' => 'guid',
@@ -88,5 +68,5 @@ class views_plugin_row_aggregator_rss extends views_plugin_row {
       'row' => $item
     ));
   }
-
 }
+

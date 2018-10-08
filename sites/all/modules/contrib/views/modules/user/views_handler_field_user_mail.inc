@@ -1,31 +1,15 @@
 <?php
-
 /**
- * @file
- * Definition of views_handler_field_user_mail.
- */
-
-/**
- * Field handler to provide acess control for the email field.
- *
- * @ingroup views_field_handlers
+ * Field handler to provide acess control for the email field
  */
 class views_handler_field_user_mail extends views_handler_field_user {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function option_definition() {
+  function option_definition() {
     $options = parent::option_definition();
     $options['link_to_user'] = array('default' => 'mailto');
     return $options;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function options_form(&$form, &$form_state) {
-    parent::options_form($form, $form_state);
+  function options_form(&$form, &$form_state) {
     $form['link_to_user'] = array(
       '#title' => t('Link this field'),
       '#type' => 'radios',
@@ -36,12 +20,10 @@ class views_handler_field_user_mail extends views_handler_field_user {
       ),
       '#default_value' => $this->options['link_to_user'],
     );
+    parent::options_form($form, $form_state);
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function render_link($data, $values) {
+  function render_link($data, $values) {
     parent::render_link($data, $values);
 
     if ($this->options['link_to_user'] == 'mailto') {
@@ -51,5 +33,4 @@ class views_handler_field_user_mail extends views_handler_field_user {
 
     return $data;
   }
-
 }

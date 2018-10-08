@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * @file
@@ -73,10 +74,10 @@ function views_content_view_from_argument_context($contexts, $conf) {
     foreach ($data->display_handler->get_argument_input() as $id => $argument) {
       if ($argument['type'] == 'context') {
         $key = array_shift($context_keys);
-        if (isset($contexts[$key])) {
+        if (isset($contexts [$key])) {
           if (strpos($argument['context'], '.')) {
             list($context, $converter) = explode('.', $argument['context'], 2);
-            $args[] = ctools_context_convert_context($contexts[$key], $converter, array('sanitize' => FALSE));
+            $args[] = ctools_context_convert_context($contexts[$key], $converter);
           }
           else {
             $args[] = $contexts[$key]->argument;
@@ -84,7 +85,7 @@ function views_content_view_from_argument_context($contexts, $conf) {
         }
       }
     }
-    // Remove any trailing NULL arguments as these are non-args:
+    // remove any trailing NULL arguments as these are non-args:
     while (count($args) && end($args) === NULL) {
       array_pop($args);
     }

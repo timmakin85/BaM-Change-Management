@@ -1,10 +1,9 @@
 <?php
+// $Id$
 
 /**
  * @file
  * Provide a javascript based dropbutton menu.
- *
- * An example are the edit/disable/delete links on the views listing page.
  *
  * The dropbutton menu will show up as a button with a clickable twisty pointer
  * to the right. When clicked the button will expand, showing the list of links.
@@ -75,7 +74,7 @@ function theme_links__ctools_dropbutton($vars) {
   if (!empty($vars['links'])) {
     $is_drop_button = (count($vars['links']) > 1);
 
-    // Add needed files.
+    // Add needed files
     if ($is_drop_button) {
       ctools_add_js('dropbutton');
       ctools_add_css('dropbutton');
@@ -86,7 +85,7 @@ function theme_links__ctools_dropbutton($vars) {
     static $id = 0;
     $id++;
 
-    // Wrapping div.
+    // Wrapping div
     $class = 'ctools-no-js';
     $class .= ($is_drop_button) ? ' ctools-dropbutton' : '';
     $class .= ' ctools-button';
@@ -98,7 +97,7 @@ function theme_links__ctools_dropbutton($vars) {
 
     $output .= '<div class="' . $class . '" id="ctools-button-' . $id . '">';
 
-    // Add a twisty if this is a dropbutton.
+    // Add a twisty if this is a dropbutton
     if ($is_drop_button) {
       $vars['title'] = ($vars['title'] ? check_plain($vars['title']) : t('open'));
 
@@ -109,11 +108,10 @@ function theme_links__ctools_dropbutton($vars) {
       else {
         $output .= '<a href="#" class="ctools-twisty ctools-text">' . $vars['title'] . '</a>';
       }
-      // ctools-link.
-      $output .= '</div>';
+      $output .= '</div>'; // ctools-link
     }
 
-    // The button content.
+    // The button content
     $output .= '<div class="ctools-content">';
 
     // Check for attributes. theme_links expects an array().
@@ -133,11 +131,12 @@ function theme_links__ctools_dropbutton($vars) {
 
     // Call theme_links to render the list of links.
     $output .= theme_links(array('links' => $vars['links'], 'attributes' => $vars['attributes'], 'heading' => ''));
-    $output .= '</div>'; // ctools-content.
-    $output .= '</div>'; // ctools-dropbutton.
+    $output .= '</div>'; // ctools-content
+    $output .= '</div>'; // ctools-dropbutton
     return $output;
   }
   else {
     return '';
   }
 }
+

@@ -1,10 +1,6 @@
 <?php
 
 /**
- * @file
- */
-
-/**
  * Schema for customizable access rulesets.
  */
 function ctools_access_ruleset_schema() {
@@ -21,7 +17,7 @@ function ctools_access_ruleset_schema_1() {
       'bulk export' => TRUE,
       'primary key' => 'rsid',
       'api' => array(
-        'owner' => 'ctools_access_ruleset',
+        'owner' => 'ctools',
         'api' => 'ctools_rulesets',
         'minimum_version' => 1,
         'current_version' => 1,

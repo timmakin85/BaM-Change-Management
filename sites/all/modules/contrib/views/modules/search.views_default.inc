@@ -6,28 +6,26 @@
  */
 
 /**
- * Implements hook_views_default_views().
+ * Implementation of hook_views_default_views()
  */
 function search_views_default_views() {
   $views = array();
 
-  $view = new view();
+  $view = new view;
   $view->name = 'backlinks';
   $view->description = 'Displays a list of nodes that link to the node, using the search backlinks table.';
   $view->tag = 'default';
   $view->base_table = 'node';
   $view->human_name = 'Backlinks';
   $view->core = 0;
-  $view->api_version = '3.0';
+  $view->api_version = '3.0-alpha1';
   $view->disabled = TRUE; /* Edit this to true to make a default view disabled initially */
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
-  $handler->display->display_options['access']['type'] = 'perm';
-  $handler->display->display_options['access']['perm'] = 'access content';
+  $handler->display->display_options['access']['type'] = 'none';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
-  $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['pager']['type'] = 'full';
   $handler->display->display_options['pager']['options']['items_per_page'] = 30;
@@ -73,8 +71,9 @@ function search_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'What links here';
   $handler->display->display_options['menu']['weight'] = '0';
 
-  /* Display: What links here */
+  /* Display: Block */
   $handler = $view->new_display('block', 'What links here', 'block');
+  $handler->display->display_options['defaults']['items_per_page'] = FALSE;
   $handler->display->display_options['defaults']['use_more'] = FALSE;
   $handler->display->display_options['use_more'] = TRUE;
   $handler->display->display_options['defaults']['style_plugin'] = FALSE;
@@ -110,9 +109,9 @@ function search_views_default_views() {
     t('All'),
     t('Pages that link to %1'),
     t('Page'),
+    t('Block'),
     t('What links here'),
   );
-
   $views['backlinks'] = $view;
 
   return $views;

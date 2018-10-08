@@ -5,7 +5,7 @@
  */
 class boxes_simple extends boxes_box {
   /**
-   * Implements boxes_box::options_defaults().
+   * Implementation of boxes_box::options_defaults().
    */
   public function options_defaults() {
     return array(
@@ -17,7 +17,7 @@ class boxes_simple extends boxes_box {
   }
 
   /**
-   * Implements boxes_box::options_form().
+   * Implementation of boxes_box::options_form().
    */
   public function options_form(&$form_state) {
     $format = filter_format_load($this->options['body']['format']);
@@ -38,7 +38,7 @@ class boxes_simple extends boxes_box {
   }
 
   /**
-   * Implements boxes_box::render().
+   * Implementation of boxes_box::render().
    */
   public function render() {
     $content = '';
@@ -49,7 +49,7 @@ class boxes_simple extends boxes_box {
     return array(
       'delta' => $this->delta, // Crucial.
       'title' => $title,
-      'subject' => check_plain($title),
+      'subject' => $title,
       'content' => $content,
     );
   }
