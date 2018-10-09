@@ -12,6 +12,7 @@ $global_settings = dirname(__FILE__) . '/global.settings.php';
 if (file_exists($global_settings)) {
   include $global_settings;
 }
+- Run the update script (Drupal was upgrade from 7.7 to 7.8)
 
 
 1.4 (example)
